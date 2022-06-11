@@ -9,7 +9,7 @@ int	main(int argc, char** argv) {
 	char	*input;
 
 	while (1) {
-		input = readline("minilisp> ");
+		input = readline("minishell> ");
 		if (strcmp("exit", input) == 0)
 			break;
 		add_history(input);
