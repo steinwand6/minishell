@@ -9,9 +9,14 @@ int	main(int argc, char** argv) {
 	char	*input;
 
 	while (1) {
+		// readlineを利用して入力を取得
 		input = readline("minishell> ");
-		if (strcmp("exit", input) == 0)
-			break;
+		// Ctrl-Dまたは"exit"で終了する
+		if (input == NULL || strcmp(input, "exit") == 0)
+		{
+			printf("exit\n");
+			break ;
+		}
 		add_history(input);
 		free(input);
 	}
