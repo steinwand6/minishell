@@ -8,16 +8,10 @@
 
 void	handle_sigint()
 {
-	//printf("\nminishell> ");
 	printf("\n");
 	rl_on_new_line();
 	rl_replace_line("", 0);
 	rl_redisplay();
-	return ;
-}
-
-void	handle_sigquit()
-{
 	return ;
 }
 
