@@ -15,13 +15,9 @@ extern t_info g_info;
 int	builtin_cd(const char *path, t_alist *env_list)
 {
 	int		errno;
-	t_alist	*pwd;
-	t_alist *oldpwd;
 
 	errno = 0;
 	getcwd(g_info.pwd, MAX_PATHSIZE);
-	if (errno != 0)
-		printf("getcwd: %s\n", strerror(errno));
 	chdir(path);
 	if (errno != 0)
 	{
