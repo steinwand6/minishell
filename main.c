@@ -9,6 +9,8 @@
 #include "libft/libft.h"
 #include "tmp.h"
 
+t_info	g_info = {};
+
 t_alist	*init_env_values(char **env)
 {
 	t_alist	*head;
@@ -60,15 +62,29 @@ void	set_signal_handler(int signo, void *func)
 	}
 }
 
-int	main(int argc, char** argv) {
-	char	*input;
-	t_alist	*env_list;
+int	shell_init(t_alist	**env_list)
+{
 	extern char **environ;
 
+	errno = 0;
+	// SIGINTとSIGQUITは手当てする
 	set_signal_handler(SIGINT, handle_sigint);
 	set_signal_handler(SIGQUIT, SIG_IGN);
 	// environから環境変数の連想リストを作成
-	env_list = init_env_values(environ);
+	*env_list = init_env_values(environ);
+	getcwd(g_info.pwd, MAX_PATHSIZE);
+	if (errno != 0)
+	{
+		printf("shell-init: error retrieving current directory %s\n", strerror(errno));
+	}
+	return (errno == 0);
+}
+
+int	main(int argc, char** argv) {
+	char	*input;
+	t_alist	*env_list;
+
+	g_info.last_result = shell_init(&env_list);
 	while (1) {
 		// readlineを利用して入力を取得
 		input = readline("minishell> ");
@@ -96,6 +112,13 @@ int	main(int argc, char** argv) {
 			input = readline("");
 			rm_alist(env_list, input);
 		}
+		else if (ft_strcmp(input, "cd") == 0)
+		{
+			input = readline("");
+			builtin_cd(input);
+		}
+		else if (ft_strcmp(input, "pwd") == 0)
+			builtin_pwd();
 		free(input);
 	}
 	free(input);
