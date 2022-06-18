@@ -24,7 +24,8 @@ t_alist	*init_env_values(char **env)
 		key = ft_strndup(*env, eq_pos - *env);
 		if (key == NULL)
 			exit(1);
-		head = add_new_alist(head, key, eq_pos + 1);
+		if (ft_strcmp(key, "OLDPWD") != 0)
+			head = add_new_alist(head, key, eq_pos + 1);
 		free(key);
 		env++;
 	}
@@ -62,7 +63,7 @@ void	set_signal_handler(int signo, void *func)
 	}
 }
 
-int	shell_init(t_alist	**env_list)
+int	shell_init()
 {
 	extern char **environ;
 
@@ -71,20 +72,19 @@ int	shell_init(t_alist	**env_list)
 	set_signal_handler(SIGINT, handle_sigint);
 	set_signal_handler(SIGQUIT, SIG_IGN);
 	// environから環境変数の連想リストを作成
-	*env_list = init_env_values(environ);
+	g_info.env_list = init_env_values(environ);
 	getcwd(g_info.pwd, MAX_PATHSIZE);
 	if (errno != 0)
-	{
 		printf("shell-init: error retrieving current directory %s\n", strerror(errno));
-	}
+	else
+		add_new_alist(g_info.env_list, "PWD", g_info.pwd);
 	return (errno == 0);
 }
 
 int	main(int argc, char** argv) {
 	char	*input;
-	t_alist	*env_list;
 
-	g_info.last_result = shell_init(&env_list);
+	g_info.last_result = shell_init();
 	while (1) {
 		// readlineを利用して入力を取得
 		input = readline("minishell> ");
@@ -99,23 +99,23 @@ int	main(int argc, char** argv) {
 			add_history(input);
 		// envだったらbuiltinのenvを実行し環境変数を表示(テスト実装)
 		if (ft_strcmp(input, "env") == 0)
-			exec_builtin_env(env_list);
+			exec_builtin_env(g_info.env_list);
 		// exportのテスト
 		else if (ft_strcmp(input, "export") == 0)
 		{
 			input = readline("");
-			add_new_alist(env_list, "testval", input);
+			add_new_alist(g_info.env_list, "testval", input);
 		}
 		// unsetのテスト
 		else if (ft_strcmp(input, "unset") == 0)
 		{
 			input = readline("");
-			rm_alist(env_list, input);
+			rm_alist(g_info.env_list, input);
 		}
 		else if (ft_strcmp(input, "cd") == 0)
 		{
 			input = readline("");
-			builtin_cd(input);
+			builtin_cd(input, g_info.env_list);
 		}
 		else if (ft_strcmp(input, "pwd") == 0)
 			builtin_pwd();
@@ -123,6 +123,6 @@ int	main(int argc, char** argv) {
 	}
 	free(input);
 	// 環境変数の連想リストをfreeする
-	free_alist(env_list);
+	free_alist(g_info.env_list);
 	return (0);
 }
