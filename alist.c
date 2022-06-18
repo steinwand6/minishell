@@ -30,10 +30,10 @@ t_alist *rm_alist(t_alist *head, const char *key)
 			free(cur->key);
 			free(cur->value);
 			free(cur);
-			break;
+			return (head);
 		}
-		cur = cur->next;
 		prev = cur;
+		cur = cur->next;
 	}
 	return (head);
 }
