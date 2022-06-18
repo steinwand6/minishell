@@ -6,6 +6,39 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include "libft/libft.h"
+#include "tmp.h"
+
+t_alist	*init_env_values(char **env)
+{
+	t_alist	*head;
+	char	*key;
+	char	*eq_pos;
+
+	head = NULL;
+	while (*env)
+	{
+		eq_pos = ft_strchr(*env, '=');
+		key = ft_strndup(*env, eq_pos - *env);
+		if (key == NULL)
+			exit(1);
+		head = add_new_alist(head, key, eq_pos + 1);
+		free(key);
+		env++;
+	}
+	return (head);
+}
+
+void	exec_builtin_env(t_alist *env_list)
+{
+	printf("start env\n");
+	while (env_list)
+	{
+		printf("%s=%s\n", env_list->key, env_list->value);
+		env_list = env_list->next;
+	}
+}
+
 void	handle_sigint()
 {
 	printf("\n");
@@ -29,9 +62,13 @@ void	set_signal_handler(int signo, void *func)
 
 int	main(int argc, char** argv) {
 	char	*input;
+	t_alist	*env_list;
+	extern char **environ;
 
 	set_signal_handler(SIGINT, handle_sigint);
 	set_signal_handler(SIGQUIT, SIG_IGN);
+	// environから環境変数の連想リストを作成
+	env_list = init_env_values(environ);
 	while (1) {
 		// readlineを利用して入力を取得
 		input = readline("minishell> ");
@@ -41,10 +78,28 @@ int	main(int argc, char** argv) {
 			printf("exit\n");
 			break ;
 		}
-		if (strcmp(input, "") != 0)
+		// 空行の場合は履歴に加えない
+		if (ft_strcmp(input, "") != 0)
 			add_history(input);
+		// envだったらbuiltinのenvを実行し環境変数を表示(テスト実装)
+		if (ft_strcmp(input, "env") == 0)
+			exec_builtin_env(env_list);
+		// exportのテスト
+		else if (ft_strcmp(input, "export") == 0)
+		{
+			input = readline("");
+			add_new_alist(env_list, "testval", input);
+		}
+		// unsetのテスト
+		else if (ft_strcmp(input, "unset") == 0)
+		{
+			input = readline("");
+			rm_alist(env_list, input);
+		}
 		free(input);
 	}
 	free(input);
+	// 環境変数の連想リストをfreeする
+	free_alist(env_list);
 	return (0);
 }
